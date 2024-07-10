@@ -46,7 +46,7 @@ Within the project there is a file `/data/dbus-wallboxgeneric/config.ini` - just
 | ------------- | ------------- | ------------- |
 | DEFAULT  | SignOfLifeLog  | Time in minutes how often a status is added to the log-file `current.log` with log-level INFO |
 | DEFAULT  | Deviceinstance | Unique ID identifying the shelly 1pm in Venus OS |
-| DEFAULT  | Manufacturer | Name of the wallbox manufacturer |
+| DEFAULT  | CustomName | Custom name of the wallbox  |
 | DEFAULT  | ProductName | Product name of the wallbox  |
 
 
