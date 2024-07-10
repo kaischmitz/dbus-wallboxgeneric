@@ -20,7 +20,7 @@ What is the script doing:
 - Running as a service
 - connecting to DBus of the Venus OS `com.victronenergy.evcharger.generic_{DeviceInstanceID_from_config}`
 - Paths are added to the DBus with default value 0 - including some settings like name, etc
-- After that a "loop" is started which pulls go-eCharger data every 750ms from the REST-API and updates the values in the DBus
+- After that a "loop" is started which can handle updated values by callback - nothing in there yet
 - After successful DBus connection all data points need to be updated via MQTT
 
 ## Install & Configuration
@@ -30,31 +30,28 @@ After that call the install.sh script.
 
 The following script should do everything for you:
 ```
-wget https://github.com/vikt0rm/dbus-goecharger/archive/refs/heads/main.zip
-unzip main.zip "dbus-goecharger-main/*" -d /data
-mv /data/dbus-goecharger-main /data/dbus-goecharger
-chmod a+x /data/dbus-goecharger/install.sh
-/data/dbus-goecharger/install.sh
+wget https://github.com/kaischmitz/dbus-wallboxgeneric/archive/refs/heads/main.zip
+unzip main.zip "dbus-wallboxgeneric-main/*" -d /data
+mv /data/dbus-wallboxgeneric-main /data/dbus-wallboxgeneric
+chmod a+x /data/dbus-wallboxgeneric/install.sh
+/data/dbus-wallboxgeneric/install.sh
 rm main.zip
 ```
 ⚠️ Check configuration after that - because service is already installed an running and with wrong connection data (host) you will spam the log-file
 
 ### Change config.ini
-Within the project there is a file `/data/dbus-goecharger/config.ini` - just change the values - most important is the deviceinstance under "DEFAULT" and host in section "ONPREMISE". More details below:
+Within the project there is a file `/data/dbus-wallboxgeneric/config.ini` - just change the values - most important is the deviceinstance under "DEFAULT". More details below:
 
 | Section  | Config vlaue | Explanation |
 | ------------- | ------------- | ------------- |
-| DEFAULT  | AccessType | Fixed value 'OnPremise' |
 | DEFAULT  | SignOfLifeLog  | Time in minutes how often a status is added to the log-file `current.log` with log-level INFO |
 | DEFAULT  | Deviceinstance | Unique ID identifying the shelly 1pm in Venus OS |
-| ONPREMISE  | Host | IP or hostname of on-premise Shelly 3EM web-interface |
+| DEFAULT  | Manufacturer | Name of the wallbox manufacturer |
+| DEFAULT  | ProductName | Product name of the wallbox  |
 
 
 ## Usefull links
-- https://github.com/goecharger/go-eCharger-API-v1
 - https://github.com/victronenergy/dbus_modbustcp/blob/master/CCGX-Modbus-TCP-register-list.xlsx
 - https://github.com/trixing/venus.dbus-twc3
 
 ## Discussions on the web
-This module/repository has been posted on the following threads:
-- https://community.victronenergy.com/questions/128552/go-echarger-integration-in-venus-os.html
