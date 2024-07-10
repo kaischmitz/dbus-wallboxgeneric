@@ -25,6 +25,7 @@ class DbusWallboxGenericService:
     config = self._getConfig()
     deviceinstance = int(config['DEFAULT']['Deviceinstance'])
     customname = config['DEFAULT']['CustomName']
+    productname = config['DEFAULT']['ProductName']
 
     self._dbusservice = VeDbusService("{}.generic_{:02d}".format(servicename, deviceinstance))
     self._paths = paths
