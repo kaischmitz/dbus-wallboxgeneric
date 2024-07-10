@@ -1,50 +1,29 @@
-# dbus-goecharger
-Integrate go-eCharger into Victron Energies Venus OS
+# dbus-wallboxgeneric
+Integrate any wallbox into Victron Energies Venus OS
 
 ## Purpose
-With the scripts in this repo it should be easy possible to install, uninstall, restart a service that connects the go-eCharger to the VenusOS and GX devices from Victron.
-Idea is inspired on @fabian-lauer and @trixing project linked below, many thanks for sharing the knowledge:
-- https://github.com/fabian-lauer/dbus-shelly-3em-smartmeter
-- https://github.com/trixing/venus.dbus-twc3
+With the scripts in this repo it should be easily possible to install, uninstall, restart a service that sets up the DBUS structure for any wallbox in VenusOS and GX devices from Victron.
+The idea is to fill this structure later on via MQTT.
+Forked from dbus-goecharger by vikt0rm.
+
 
 ## How it works
-### My setup (only relevant for this script)
-- 3-Phase installation
-- Venus OS on Raspberry PI 4 4GB version 1.1 - Firmware v2.84
-  - No other devices from Victron connected
-  - Connected to Wifi netowrk "A"
-- go-eCharger hardware version 2
-  - Make sure in your go-eCharger app that api v1 is activated
-  - Connected to Wifi network "A" with a known IP
+### Why? ###
+I am running a Vestel EVC04 wallbox. It can be controlled via Modbus TCP, however per manufacturer's spec only one single connection to the Modbus instance is allowed.
+The entire charging control in my case is running in Nodered which has the connection to the wallbox via Modbus TCP.
+So in order to integrate the measured values from the wallbox into the VRM portal I wanted to write the values from my Nodered instance to the Venus OS or VRM directly.
 
 ### Details / Process
 What is the script doing:
 - Running as a service
-- connecting to DBus of the Venus OS `com.victronenergy.evcharger.http_{DeviceInstanceID_from_config}`
-- After successful DBus connection go-eCharger is accessed via REST-API - simply the /status is called and a JSON is returned with all details
-  A sample JSON file from Shelly 1PM can be found [here](docs/go-eCharger-status-sample.json)
-- Serial/MAC is taken from the response as device serial
+- connecting to DBus of the Venus OS `com.victronenergy.evcharger.generic_{DeviceInstanceID_from_config}`
 - Paths are added to the DBus with default value 0 - including some settings like name, etc
 - After that a "loop" is started which pulls go-eCharger data every 750ms from the REST-API and updates the values in the DBus
-
-Thats it 😄
-
-### Restrictions
-This script until now supports reading values from the go-eCharger. Writing values is supported for  "Enable Charging", "Charging current" and "Max charging current". 
-Control of go-eCharger by the victron system in "Mode" "Auto" is not supported for now and changing the value will have no effect.
-
-
-### Pictures
-![Remote Console - Overview](img/venus-os-remote-console-overview.PNG) 
-![go-eCharger - Values](img/venus-os-goecharger.PNG)
-![go-eCharger - Values](img/venus-os-goecharger2.PNG)
-![SmartMeter - Device Details](img/venus-os-goecharger-devicedetails.PNG)
-![Victron Portal - Dashboard](img/venus-os-dashboard.PNG)
-![Victron Portal - Advanced](img/venus-os-advanced-configuration.png)
+- After successful DBus connection all data points need to be updated via MQTT
 
 ## Install & Configuration
 ### Get the code
-Just grap a copy of the main branche and copy them to a folder under `/data/` e.g. `/data/dbus-goecharger`.
+Just grap a copy of the main branche and copy them to a folder under `/data/` e.g. `/data/dbus-wallboxgeneric`.
 After that call the install.sh script.
 
 The following script should do everything for you:
