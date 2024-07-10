@@ -1,3 +1,5 @@
+# Don't use this yet - work in progress #
+
 # dbus-wallboxgeneric
 Integrate any wallbox into Victron Energies Venus OS
 
