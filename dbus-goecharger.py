@@ -67,9 +67,6 @@ class DbusWallboxGenericService:
     # charging time in float
     self._chargingTime = 0.0
 
-    # add _update function 'timer'
-    gobject.timeout_add(250, self._update) # pause 250ms before the next request
-    
     # add _signOfLife 'timer' to get feedback in log every 5minutes
     gobject.timeout_add(self._getSignOfLifeInterval()*60*1000, self._signOfLife)
  
