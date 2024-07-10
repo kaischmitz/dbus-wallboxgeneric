@@ -24,9 +24,9 @@ class DbusWallboxGenericService:
   def __init__(self, servicename, paths, productname='generic-wallbox', connection='MQTT external data update'):
     config = self._getConfig()
     deviceinstance = int(config['DEFAULT']['Deviceinstance'])
-    hardwareVersion = int(config['DEFAULT']['HardwareVersion'])
+    customname = config['DEFAULT']['CustomName']
 
-    self._dbusservice = VeDbusService("{}.http_{:02d}".format(servicename, deviceinstance))
+    self._dbusservice = VeDbusService("{}.generic_{:02d}".format(servicename, deviceinstance))
     self._paths = paths
     
     logging.debug("%s /DeviceInstance = %d" % (servicename, deviceinstance))
@@ -45,10 +45,10 @@ class DbusWallboxGenericService:
     self._dbusservice.add_path('/DeviceInstance', deviceinstance)
     self._dbusservice.add_path('/ProductId', 0xFFFF)
     self._dbusservice.add_path('/ProductName', productname)
-    self._dbusservice.add_path('/CustomName', productname)    
-    self._dbusservice.add_path('/FirmwareVersion', 0)
-    self._dbusservice.add_path('/Serial', "noserial")
-    self._dbusservice.add_path('/HardwareVersion', hardwareVersion)
+    self._dbusservice.add_path('/CustomName', customname)    
+    self._dbusservice.add_path('/FirmwareVersion', 0, writeable=True)
+    self._dbusservice.add_path('/Serial', "00000000", writeable=True)
+    self._dbusservice.add_path('/HardwareVersion', 0, writeable=True)
     self._dbusservice.add_path('/Connected', 1)
     self._dbusservice.add_path('/UpdateIndex', 0)
     
