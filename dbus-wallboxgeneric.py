@@ -34,7 +34,8 @@ class DbusWallboxGenericService:
     
     paths_wo_unit = [
       '/Status',  # value 'car' 1: charging station ready, no vehicle 2: vehicle loads 3: Waiting for vehicle 4: Charge finished, vehicle still connected
-      '/Mode'
+      '/Mode',
+      '/Position'
     ]
     
     # Create the management objects, as specified in the ccgx dbus-api document
