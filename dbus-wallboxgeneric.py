@@ -98,7 +98,9 @@ class DbusWallboxGenericService:
     logging.info("someone else updated %s to %s" % (path, value))
 
     # Add actions based on changed values here
-    return False
+
+    # Returning True to accept the change
+    return True
 
 
 def main():
