@@ -20,8 +20,8 @@ sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/opt/victronenergy/d
 from vedbus import VeDbusService
 
 
-class DbusGoeChargerService:
-  def __init__(self, servicename, paths, productname='go-eCharger', connection='go-eCharger HTTP JSON service'):
+class DbusWallboxGenericService:
+  def __init__(self, servicename, paths, productname='generic-wallbox', connection='MQTT external data update'):
     config = self._getConfig()
     deviceinstance = int(config['DEFAULT']['Deviceinstance'])
     hardwareVersion = int(config['DEFAULT']['HardwareVersion'])
@@ -36,9 +36,6 @@ class DbusGoeChargerService:
       '/Mode'
     ]
     
-    #get data from go-eCharger
-    data = self._getGoeChargerData()
-
     # Create the management objects, as specified in the ccgx dbus-api document
     self._dbusservice.add_path('/Mgmt/ProcessName', __file__)
     self._dbusservice.add_path('/Mgmt/ProcessVersion', 'Unkown version, and running on Python ' + platform.python_version())
@@ -46,19 +43,18 @@ class DbusGoeChargerService:
     
     # Create the mandatory objects
     self._dbusservice.add_path('/DeviceInstance', deviceinstance)
-    self._dbusservice.add_path('/ProductId', 0xFFFF) # 
+    self._dbusservice.add_path('/ProductId', 0xFFFF)
     self._dbusservice.add_path('/ProductName', productname)
     self._dbusservice.add_path('/CustomName', productname)    
-    if data:
-       self._dbusservice.add_path('/FirmwareVersion', int(data['fwv'].replace('.', '')))
-       self._dbusservice.add_path('/Serial', data['sse'])
+    self._dbusservice.add_path('/FirmwareVersion', 0)
+    self._dbusservice.add_path('/Serial', "noserial")
     self._dbusservice.add_path('/HardwareVersion', hardwareVersion)
     self._dbusservice.add_path('/Connected', 1)
     self._dbusservice.add_path('/UpdateIndex', 0)
     
     # add paths without units
     for path in paths_wo_unit:
-      self._dbusservice.add_path(path, None)
+      self._dbusservice.add_path(path, None, writeable=True)
     
     # add path values to dbus
     for path, settings in self._paths.items():
@@ -92,71 +88,6 @@ class DbusGoeChargerService:
     
     return int(value)
   
-  
-  def _getGoeChargerStatusUrl(self):
-    config = self._getConfig()
-    accessType = config['DEFAULT']['AccessType']
-    
-    if accessType == 'OnPremise': 
-        URL = "http://%s/status" % (config['ONPREMISE']['Host'])
-    else:
-        raise ValueError("AccessType %s is not supported" % (config['DEFAULT']['AccessType']))
-    
-    return URL
-  
-  def _getGoeChargerMqttPayloadUrl(self, parameter, value):
-    config = self._getConfig()
-    accessType = config['DEFAULT']['AccessType']
-    
-    if accessType == 'OnPremise': 
-        URL = "http://%s/mqtt?payload=%s=%s" % (config['ONPREMISE']['Host'], parameter, value)
-    else:
-        raise ValueError("AccessType %s is not supported" % (config['DEFAULT']['AccessType']))
-    
-    return URL
-  
-  def _setGoeChargerValue(self, parameter, value):
-    URL = self._getGoeChargerMqttPayloadUrl(parameter, str(value))
-    request_data = requests.get(url = URL)
-    
-    # check for response
-    if not request_data:
-      raise ConnectionError("No response from go-eCharger - %s" % (URL))
-    
-    json_data = request_data.json()
-    
-    # check for Json
-    if not json_data:
-        raise ValueError("Converting response to JSON failed")
-    
-    if json_data[parameter] == str(value):
-      return True
-    else:
-      logging.warning("go-eCharger parameter %s not set to %s" % (parameter, str(value)))
-      return False
-    
- 
-  def _getGoeChargerData(self):
-    URL = self._getGoeChargerStatusUrl()
-    try:
-       request_data = requests.get(url = URL, timeout=5)
-    except Exception:
-       return None
-    
-    # check for response
-    if not request_data:
-        raise ConnectionError("No response from go-eCharger - %s" % (URL))
-    
-    json_data = request_data.json()     
-    
-    # check for Json
-    if not json_data:
-        raise ValueError("Converting response to JSON failed")
-    
-    
-    return json_data
- 
- 
   def _signOfLife(self):
     logging.info("--- Start: sign of life ---")
     logging.info("Last _update() call: %s" % (self._lastUpdate))
@@ -164,88 +95,12 @@ class DbusGoeChargerService:
     logging.info("--- End: sign of life ---")
     return True
  
-  def _update(self):   
-    try:
-       #get data from go-eCharger
-       data = self._getGoeChargerData()
-       
-       if data is not None:
-          #send data to DBus
-          self._dbusservice['/Ac/L1/Power'] = int(data['nrg'][7] * 0.1 * 1000)
-          self._dbusservice['/Ac/L2/Power'] = int(data['nrg'][8] * 0.1 * 1000)
-          self._dbusservice['/Ac/L3/Power'] = int(data['nrg'][9] * 0.1 * 1000)
-          self._dbusservice['/Ac/Power'] = int(data['nrg'][11] * 0.01 * 1000)
-          self._dbusservice['/Ac/Voltage'] = int(data['nrg'][0])
-          self._dbusservice['/Current'] = max(data['nrg'][4] * 0.1, data['nrg'][5] * 0.1, data['nrg'][6] * 0.1)
-          self._dbusservice['/Ac/Energy/Forward'] = int(float(data['eto']) / 10.0)
-          
-          self._dbusservice['/StartStop'] = int(data['alw'])
-          self._dbusservice['/SetCurrent'] = int(data['amp'])
-          self._dbusservice['/MaxCurrent'] = int(data['ama']) 
-          
-          # update chargingTime, increment charge time only on active charging (2), reset when no car connected (1)
-          timeDelta = time.time() - self._lastUpdate
-          if int(data['car']) == 2 and self._lastUpdate > 0:  # vehicle loads
-            self._chargingTime += timeDelta
-          elif int(data['car']) == 1:  # charging station ready, no vehicle
-            self._chargingTime = 0
-          self._dbusservice['/ChargingTime'] = int(self._chargingTime)
-
-          self._dbusservice['/Mode'] = 0  # Manual, no control
-          
-          config = self._getConfig()
-          hardwareVersion = int(config['DEFAULT']['HardwareVersion'])
-          if hardwareVersion == 3:
-            self._dbusservice['/MCU/Temperature'] = int(data['tma'][0])
-          else:
-            self._dbusservice['/MCU/Temperature'] = int(data['tmp'])
-
-          # value 'car' 1: charging station ready, no vehicle 2: vehicle loads 3: Waiting for vehicle 4: Charge finished, vehicle still connected
-          status = 0
-          if int(data['car']) == 1:
-            status = 0
-          elif int(data['car']) == 2:
-            status = 2
-          elif int(data['car']) == 3:
-            status = 6
-          elif int(data['car']) == 4:
-            status = 3
-          self._dbusservice['/Status'] = status
-
-          #logging
-          logging.debug("Wallbox Consumption (/Ac/Power): %s" % (self._dbusservice['/Ac/Power']))
-          logging.debug("Wallbox Forward (/Ac/Energy/Forward): %s" % (self._dbusservice['/Ac/Energy/Forward']))
-          logging.debug("---")
-          
-          # increment UpdateIndex - to show that new data is available
-          index = self._dbusservice['/UpdateIndex'] + 1  # increment index
-          if index > 255:   # maximum value of the index
-            index = 0       # overflow from 255 to 0
-          self._dbusservice['/UpdateIndex'] = index
-
-          #update lastupdate vars
-          self._lastUpdate = time.time()  
-       else:
-          logging.debug("Wallbox is not available")
-
-    except Exception as e:
-       logging.critical('Error at %s', '_update', exc_info=e)
-       
-    # return true, otherwise add_timeout will be removed from GObject - see docs http://library.isr.ist.utl.pt/docs/pygtk2reference/gobject-functions.html#function-gobject--timeout-add
-    return True
  
   def _handlechangedvalue(self, path, value):
     logging.info("someone else updated %s to %s" % (path, value))
-    
-    if path == '/SetCurrent':
-      return self._setGoeChargerValue('amp', value)
-    elif path == '/StartStop':
-      return self._setGoeChargerValue('alw', value)
-    elif path == '/MaxCurrent':
-      return self._setGoeChargerValue('ama', value)
-    else:
-      logging.info("mapping for evcharger path %s does not exist" % (path))
-      return False
+
+    # Add actions based on changed values here
+    return False
 
 
 def main():
@@ -274,7 +129,7 @@ def main():
       _s = lambda p, v: (str(v) + 's')
      
       #start our main-service
-      pvac_output = DbusGoeChargerService(
+      pvac_output = DbusWallboxGenericService(
         servicename='com.victronenergy.evcharger',
         paths={
           '/Ac/Power': {'initial': 0, 'textformat': _w},
