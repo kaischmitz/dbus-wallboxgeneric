@@ -21,6 +21,10 @@ What is the script doing:
 - After that a "loop" is started which can handle updated values by callback - nothing in there yet
 - After successful DBus connection all data points need to be updated via MQTT
 
+![MQTT data points](/mqtt-settings.PNG)
+![VRM dashboard](/vrm-dashboard.PNG)
+![VRM device list](/vrm-devicelist.PNG)
+
 ## Install & Configuration
 ### Get the code
 Just grap a copy of the main branche and copy them to a folder under `/data/` e.g. `/data/dbus-wallboxgeneric`.
