@@ -19,10 +19,13 @@ What is the script doing:
 - connecting to DBus of the Venus OS `com.victronenergy.evcharger.generic_{DeviceInstanceID_from_config}`
 - Paths are added to the DBus with default value 0 - including some settings like name, etc
 - After that a "loop" is started which can handle updated values by callback - nothing in there yet
-- After successful DBus connection all data points need to be updated via MQTT
+- After successful DBus connection all data points need to be updated via MQTT. The coding of the data points is listed in [CCGX-Modbus-TCP-register-list.xlsx](https://github.com/victronenergy/dbus_modbustcp/blob/master/CCGX-Modbus-TCP-register-list.xlsx) in the field list under com.victronenergy.evcharger
+
 
 ![MQTT data points](/mqtt-settings.PNG)
+
 ![VRM dashboard](/vrm-dashboard.PNG)
+
 ![VRM device list](/vrm-devicelist.PNG)
 
 ## Install & Configuration
