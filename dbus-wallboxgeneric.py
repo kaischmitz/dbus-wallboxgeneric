@@ -27,7 +27,7 @@ class DbusWallboxGenericService:
     customname = config['DEFAULT']['CustomName']
     productname = config['DEFAULT']['ProductName']
 
-    self._dbusservice = VeDbusService("{}.generic_{:02d}".format(servicename, deviceinstance))
+    self._dbusservice = VeDbusService("{}.generic_{:02d}".format(servicename, deviceinstance),register=False)
     self._paths = paths
     
     logging.debug("%s /DeviceInstance = %d" % (servicename, deviceinstance))
@@ -62,6 +62,9 @@ class DbusWallboxGenericService:
     for path, settings in self._paths.items():
       self._dbusservice.add_path(
         path, settings['initial'], gettextcallback=settings['textformat'], writeable=True, onchangecallback=self._handlechangedvalue)
+
+    # register the service
+    self._dbusservice.register()
 
     # last update
     self._lastUpdate = 0
