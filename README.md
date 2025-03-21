@@ -1,11 +1,9 @@
-# Don't use this yet - work in progress #
-
 # dbus-wallboxgeneric
 Integrate any wallbox into Victron Energies Venus OS
 
 ## Purpose
 With the scripts in this repo it should be easily possible to install, uninstall, restart a service that sets up the DBUS structure for any wallbox in VenusOS and GX devices from Victron.
-The idea is to fill this structure later on via MQTT.
+The idea is to fill this structure later on via MQTT. The Wallbox then shows up in VRM.
 Forked from dbus-goecharger by vikt0rm.
 
 
